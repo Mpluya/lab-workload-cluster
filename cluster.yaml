@@ -1,0 +1,50 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: dood
+  namespace: mlarge
+spec:
+  clusterNetwork:
+    services:
+      cidrBlocks: ["10.196.0.0/12"]
+    pods:
+      cidrBlocks: ["192.168.0.0/16"]
+    serviceDomain: "cluster.local"
+  topology:
+    class: tanzukubernetescluster
+    version: v1.29.4---vmware.3-fips.1-tkg.1
+    controlPlane:
+      replicas: 1
+    workers:
+      machineDeployments:
+        - class: node-pool
+          name: node-pool-1
+          replicas: 3
+          variables:
+            overrides:
+            - name: vmClass
+              value: best-effort-4-by-8
+    variables:
+      - name: vmClass
+        value: best-effort-medium
+      - name: storageClass
+        value: tanzu-storage-policy
+      - name: defaultStorageClass
+        value: tanzu-storage-policy
+      - name: nodePoolVolumes
+        value:
+          - name: containerd
+            capacity:
+              storage: 50Gi
+            mountPath: /var/lib/containerd
+            storageClass: tanzu-storage-policy
+          - name: kubelet
+            capacity:
+              storage: 50Gi
+            mountPath: /var/lib/kubelet
+            storageClass: tanzu-storage-policy
+      - name: trust
+        value:
+          additionalTrustedCAs:
+          - name: tanzu-home-root
+          - name: tanzu-home-int
