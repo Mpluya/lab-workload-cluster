@@ -1,0 +1,6 @@
+#@ load("@ytt:overlay", "overlay")
+#@overlay/match by=overlay.subset({"kind":"Service", "metadata":{"name":"argocd-server"}})
+#@overlay/match-child-defaults missing_ok=True
+---
+spec:
+  type: LoadBalancer
