@@ -1,0 +1,50 @@
+# kubernetes/postgres.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: backstage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres
+          image: harbor.tanzu.home/mlarge/postgres:13-alpine
+          imagePullPolicy: 'IfNotPresent'
+          ports:
+            - containerPort: 5432
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          envFrom:
+            - secretRef:
+                name: postgres-secrets
+          env:
+            - name: POSTGRES_HOST
+              value: postgres.backstage
+            - name: POSTGRES_PORT
+              value: '5432'
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgresdb
+      imagePullSecrets:
+        - name: harbor-secret
+      volumes:
+        - name: postgresdb
+          persistentVolumeClaim:
+            claimName: postgres-storage-claim
